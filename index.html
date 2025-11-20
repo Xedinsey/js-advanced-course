@@ -5,7 +5,11 @@
     <title>Title</title>
 </head>
 <body>
-    <div id="root"></div>
+    <my-select>
+        <option value="opt1">Option 1</option>
+        <option value="opt2">Option 2</option>
+        <option value="opt3">Option 3</option>
+    </my-select>
 
     <script>
         const components = ['my-select'];
@@ -21,11 +25,6 @@
             if (!customElements.get(name)) {
                 console.warn(`Custom element "${name}" is not registered yet.`);
                 return;
-            }
-
-            if (!document.querySelector(`#root ${name}`)) {
-                const componentEl = document.createElement(name);
-                document.querySelector('#root').append(componentEl);
             }
         };
 
