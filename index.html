@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script>
+        const components = ['my-select'];
+
+        const onLoad = (evt) => {
+            const scriptEl = evt.currentTarget;
+            const { name } = scriptEl.dataset;
+            if (!name) {
+                console.warn('Component name is not provided in data-name attribute.');
+                return;
+            }
+
+            if (!customElements.get(name)) {
+                console.warn(`Custom element "${name}" is not registered yet.`);
+                return;
+            }
+
+            if (!document.querySelector(`#root ${name}`)) {
+                const componentEl = document.createElement(name);
+                document.querySelector('#root').append(componentEl);
+            }
+        };
+
+        const onError = (evt) => {
+            const scriptEl = evt.currentTarget;
+            const { name } = scriptEl.dataset;
+            console.error(`Failed to load component "${name ?? 'unknown'}".`, evt);
+        };
+
+        components.forEach((component) => {
+            const script = document.createElement('script');
+            script.src = `./${component}.js`;
+            script.dataset.name = component;
+            script.addEventListener('load', onLoad, { once: true });
+            script.addEventListener('error', onError, { once: true });
+            document.body.append(script);
+        });
+    </script>
+</body>
+</html>
