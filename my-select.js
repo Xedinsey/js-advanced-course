@@ -59,6 +59,23 @@ class MySelect extends HTMLElement {
 
         const template = document.createElement('template');
         template.innerHTML = `
+            <style>
+            
+                my-select {
+                    position: relative;
+                    display: inline-block;
+                }
+                .select-popup{
+                    display: none;
+                    position: absolute;
+                    top: 100%;
+                    left: 0;
+                }
+                
+                .select-popup.open{
+                    display: block;
+                }
+            </style>
             <button class="select-button" type="button"></button>
             <div class="select-popup">
                 <input class="select-popup-search" type="search" placeholder="Search..." />
@@ -99,6 +116,10 @@ class MySelect extends HTMLElement {
         });
 
         return optionsContainer;
+    }
+
+    #openPopup() {
+      this.#selectPopup.classList.toggle("open");
     }
 }
 
