@@ -15,12 +15,14 @@ class MySelect extends HTMLElement {
     #optionsBox;
     #options = [];
     #initialized = false;
+    #shadow;
 
     connectedCallback() {
         if (this.#initialized) {
             return;
         }
 
+        this.#shadow = this.attachShadow({ mode: 'open' });
         this.#options = this.#extractOptions();
         this.#createTemplate();
 
@@ -29,6 +31,7 @@ class MySelect extends HTMLElement {
         this.#optionsBox = renderedOptions;
 
         this.#selectButton.textContent = this.getAttribute('label') ?? 'Select options';
+        this.#selectButton.addEventListener('click', () => this.#openPopup());
 
         this.#initialized = true;
     }
@@ -59,6 +62,73 @@ class MySelect extends HTMLElement {
 
         const template = document.createElement('template');
         template.innerHTML = `
+            <style>
+            
+                :host {
+                    position: relative;
+                    display: inline-block;
+                    width: 280px;
+                    font: 15px system-ui, sans-serif;
+                    color: #334155;
+                }
+                * { box-sizing: border-box; }
+                .select-button {
+                    width: 100%;
+                    padding: 12px 16px;
+                    text-align: left;
+                    font: inherit;
+                    color: inherit;
+                    background: var(--select-background, white);
+                    border: 1px solid #cbd5e1;
+                    border-radius: 8px;
+                    cursor: pointer;
+                }
+                .select-button::after { content: '▾'; float: right; }
+                .select-button:hover { border-color: #6366f1; }
+                .select-button:focus-visible,
+                .select-popup-search:focus-visible {
+                    outline: 2px solid #6366f1;
+                    outline-offset: 2px;
+                }
+                .select-popup{
+                    display: none;
+                    position: absolute;
+                    top: 100%;
+                    left: 0;
+                    width: 100%;
+                    margin-top: 6px;
+                    padding: 8px;
+                    background: var(--select-popup-background, white);
+                    border: 1px solid #e2e8f0;
+                    border-radius: 8px;
+                    box-shadow: 0 8px 24px #0f172a26;
+                    z-index: 1;
+                }
+                .select-popup-search {
+                    width: 100%;
+                    padding: 9px 12px;
+                    margin-bottom: 6px;
+                    font: inherit;
+                    border: 1px solid #cbd5e1;
+                    border-radius: 6px;
+                }
+                .select-popup-options { max-height: 240px; overflow-y: auto; }
+                .option {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    padding: 10px;
+                    border-radius: 6px;
+                    cursor: pointer;
+                }
+                .option:hover { background: #f1f5f9; }
+                .option:has(input:checked) { background: #eef2ff; color: #4338ca; }
+                .option input { accent-color: #6366f1; width: 16px; height: 16px; }
+                
+                .select-popup.open{
+                    display: block;
+                }
+            </style>
             <button class="select-button" type="button"></button>
             <div class="select-popup">
                 <input class="select-popup-search" type="search" placeholder="Search..." />
@@ -66,12 +136,12 @@ class MySelect extends HTMLElement {
             </div>
         `;
 
-        this.append(template.content.cloneNode(true));
+        this.#shadow.append(template.content.cloneNode(true));
 
-        this.#selectButton = this.querySelector('.select-button');
-        this.#selectPopup = this.querySelector('.select-popup');
-        this.#selectPopupSearch = this.querySelector('.select-popup-search');
-        this.#optionsBox = this.querySelector('.select-popup-options');
+        this.#selectButton = this.#shadow.querySelector('.select-button');
+        this.#selectPopup = this.#shadow.querySelector('.select-popup');
+        this.#selectPopupSearch = this.#shadow.querySelector('.select-popup-search');
+        this.#optionsBox = this.#shadow.querySelector('.select-popup-options');
     }
 
     #renderOptions(options) {
@@ -99,6 +169,10 @@ class MySelect extends HTMLElement {
         });
 
         return optionsContainer;
+    }
+
+    #openPopup() {
+      this.#selectPopup.classList.toggle("open");
     }
 }
 
