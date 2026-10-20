@@ -5,14 +5,22 @@
     <title>Title</title>
 </head>
 <body>
-    <my-select>
+    <my-card>
+        <span slot="header">Выбор опций</span>
+        <my-select>
         <option value="opt1">Option 1</option>
         <option value="opt2">Option 2</option>
         <option value="opt3">Option 3</option>
-    </my-select>
+        </my-select>
+        <p>Выбрано: <output id="selected-values">—</output></p>
+        <span slot="footer">Можно выбрать несколько значений</span>
+    </my-card>
 
     <script>
-        const components = ['my-select'];
+        const components = ['my-select', 'my-card'];
+        document.querySelector('my-select').addEventListener('change', event => {
+            document.querySelector('#selected-values').textContent = event.target.value || '—';
+        });
 
         const onLoad = (evt) => {
             const scriptEl = evt.currentTarget;

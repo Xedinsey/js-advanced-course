@@ -16,9 +16,17 @@ class MySelect extends HTMLElement {
     #options = [];
     #initialized = false;
     #shadow;
+    #selected = new Set();
+    #listeners;
+
+    get value() {
+        return this.#options.filter(option => this.#selected.has(option.value))
+            .map(option => option.value).join(',');
+    }
 
     connectedCallback() {
         if (this.#initialized) {
+            this.#listen();
             return;
         }
 
@@ -31,13 +39,47 @@ class MySelect extends HTMLElement {
         this.#optionsBox = renderedOptions;
 
         this.#selectButton.textContent = this.getAttribute('label') ?? 'Select options';
-        this.#selectButton.addEventListener('click', () => this.#openPopup());
+        this.#listen();
 
         this.#initialized = true;
     }
 
     disconnectedCallback() {
+        this.#listeners.abort();
+        this.#selectPopup.classList.remove('open');
+    }
 
+    #listen() {
+        this.#listeners?.abort();
+        this.#listeners = new AbortController();
+        const settings = { signal: this.#listeners.signal };
+        this.#selectButton.addEventListener('click', () => this.#openPopup(), settings);
+        this.#selectPopupSearch.addEventListener('input', () => {
+            const query = this.#selectPopupSearch.value.trim().toLocaleLowerCase();
+            const options = this.#options.filter(option => option.label.toLocaleLowerCase().includes(query));
+            const renderedOptions = this.#renderOptions(options);
+            this.#optionsBox.replaceWith(renderedOptions);
+            this.#optionsBox = renderedOptions;
+        }, settings);
+        this.#selectPopup.addEventListener('change', event => {
+            const checkbox = event.target;
+            if (!checkbox.matches('input[type="checkbox"]')) return;
+            if (checkbox.checked) this.#selected.add(checkbox.value);
+            else this.#selected.delete(checkbox.value);
+            this.#selectButton.textContent = this.#options
+                .filter(option => this.#selected.has(option.value))
+                .map(option => option.label).join(', ') || this.getAttribute('label') || 'Select options';
+            this.dispatchEvent(new Event('change', { bubbles: true }));
+        }, settings);
+        this.ownerDocument.addEventListener('click', event => {
+            if (!event.composedPath().includes(this)) this.#selectPopup.classList.remove('open');
+        }, settings);
+        this.#shadow.addEventListener('keydown', event => {
+            if (event.key === 'Escape') {
+                this.#selectPopup.classList.remove('open');
+                this.#selectButton.focus();
+            }
+        }, settings);
     }
 
     #extractOptions() {
@@ -163,6 +205,7 @@ class MySelect extends HTMLElement {
 
             optionLabel.dataset.value = value;
             checkbox.value = value;
+            checkbox.checked = this.#selected.has(value);
             optionLabel.append(document.createTextNode(label));
 
             optionsContainer.append(optionFragment);
